@@ -1,0 +1,58 @@
+# NJ Store — Python + Neon PostgreSQL
+
+A self-contained e-commerce store with a Python (FastAPI) backend and Neon PostgreSQL database.
+Deploy once, runs forever free.
+
+---
+
+## Step 1 — Get a free Neon database
+
+1. Go to **neon.tech** → sign up free (no credit card)
+2. Create a project → pick any region
+3. Go to **Connection Details** → copy the connection string
+   - It looks like: `postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require`
+4. Save it — you'll paste it as `DB_URL` when deploying
+
+Tables and categories are created **automatically** on first startup. No SQL to run.
+
+---
+
+## Step 2 — Deploy on Render (free forever)
+
+1. Push this folder to a **free GitHub repo**
+   - Go to github.com → New repository → upload these files
+2. Go to **render.com** → sign up free → New → Web Service
+3. Connect your GitHub repo
+4. Set:
+   - **Runtime**: Python 3
+   - **Build command**: `pip install -r requirements.txt`
+   - **Start command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+5. Add environment variables:
+   - `DB_URL` = your Neon connection string
+   - `ADMIN_PIN` = `nj2024` (or choose your own)
+6. Click **Deploy**
+
+Your store is live at a free `*.onrender.com` URL. No time limit.
+
+---
+
+## Admin Panel
+
+Go to `your-url.onrender.com/admin` → enter your PIN.
+
+- Add products with photos
+- View orders and messages
+- Manage stock
+
+---
+
+## Run Locally (for testing)
+
+```bash
+pip install -r requirements.txt
+export DB_URL="your-neon-connection-string"
+export ADMIN_PIN="nj2024"
+uvicorn main:app --reload --port 8000
+```
+
+Open http://localhost:8000
