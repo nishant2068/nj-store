@@ -1,26 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>NJ Store — Daily Essentials in Nepal (रु NPR)</title>
-    <meta name="description" content="NJ Store is your neighborhood shop for everyday essentials — kitchen, cleaning, personal care, stationery & electronics. Fast contact, NPR pricing." />
-    <meta name="keywords" content="NJ Store, Nepal shop, online store Nepal, NPR, daily essentials, Nepalese rupee" />
-    <meta name="theme-color" content="#6366f1" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="NJ Store — Daily Essentials in Nepal" />
-    <meta property="og:description" content="Your vibrant neighborhood shop for everyday essentials. Browse, message, and buy — all in NPR (रु)." />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="NJ Store" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/index-BDTLRp-8.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Dlgmj8sD.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
-</html>
+import os
+from datetime import datetime
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
+
+DATABASE_URL = os.environ["DB_URL"]
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+
+class Category(Base):
+    __tablename__ = "categories"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    icon = Column(String, default="📦")
+
+
+class Product(Base):
+    __tablename__ = "products"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(Text, default="")
+    price = Column(Float, nullable=False)
+    image_url = Column(String, default="")
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    stock = Column(Integer, default=0)
+    featured = Column(Boolean, default=False)
+
+
+class Order(Base):
+    __tablename__ = "orders"
+    id = Column(Integer, primary_key=True, index=True)
+    customer_name = Column(String, nullable=False)
+    customer_phone = Column(String, nullable=False)
+    customer_address = Column(Text, nullable=False)
+    total = Column(Float, nullable=False)
+    status = Column(String, default="pending")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class OrderItem(Base):
+    __tablename__ = "order_items"
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, nullable=False)
+    price = Column(Float, nullable=False)
+
+
+class Message(Base):
+    __tablename__ = "messages"
+    id = Column(Integer, primary_key=True, index=True)
+    sender_name = Column(String, nullable=False)
+    sender_phone = Column(String, nullable=False)
+    message_type = Column(String, default="general")
+    subject = Column(String, nullable=False)
+    body = Column(Text, nullable=False)
+    product_id = Column(Integer, nullable=True)
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        if db.query(Category).count() == 0:
+            _seed_categories(db)
+    finally:
+        db.close()
+
+
+def _seed_categories(db: Session):
+    for cat in [
+        Category(name="Food & Snacks", icon="🍎"),
+        Category(name="Drinks", icon="🥤"),
+        Category(name="Household", icon="🏠"),
+        Category(name="Personal Care", icon="🧴"),
+        Category(name="Stationery", icon="✏️"),
+        Category(name="Electronics", icon="📱"),
+        Category(name="Clothing", icon="👕"),
+        Category(name="Other", icon="📦"),
+    ]:
+        db.add(cat)
+    db.commit()
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
