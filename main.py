@@ -122,6 +122,28 @@ async def upload_image(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, f)
     return {"url": f"/uploads/{filename}"}
 
+@app.post("/api/upload-base64")
+async def upload_base64_image(data: dict):
+    """Upload image from base64 data (camera or canvas)"""
+    try:
+        base64_data = data.get("data", "")
+        # Remove data:image/...;base64, prefix if present
+        if "," in base64_data:
+            base64_data = base64_data.split(",")[1]
+        
+        # Decode base64
+        image_data = base64.b64decode(base64_data)
+        
+        # Save file
+        filename = f"{uuid.uuid4()}.jpg"
+        save_path = UPLOADS_DIR / filename
+        with open(save_path, "wb") as f:
+            f.write(image_data)
+        
+        return {"url": f"/uploads/{filename}"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid base64 image: {str(e)}")
+
 @app.get("/api/orders")
 def list_orders(db: Session = Depends(get_db)):
     orders = db.query(Order).order_by(Order.created_at.desc()).all()
