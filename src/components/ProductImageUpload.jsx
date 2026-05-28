@@ -11,32 +11,39 @@ export default function ProductImageUpload({ onImageUrl, initialUrl = '' }) {
   const canvasRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(false);
 
-  // File Upload
-  const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleUrlImport = async () => {
+  const url = prompt('Enter image URL:');
 
-    setLoading(true);
-    const formData = new FormData();
-    formData.append('file', file);
+  if (!url) return;
 
-    try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
-      setImageUrl(data.url);
-      setPreview(data.url);
-      onImageUrl(data.url);
-      setUploadMode(null);
-    } catch (error) {
-      alert('Upload failed: ' + error.message);
-    } finally {
-      setLoading(false);
+  setLoading(true);
+
+  try {
+    const response = await fetch('/api/upload-url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Upload failed');
     }
-  };
 
+    setImageUrl(data.url);
+    setPreview(data.url);
+    onImageUrl(data.url);
+    setUploadMode(null);
+
+  } catch (error) {
+    alert('Failed: ' + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
   // URL Import
   const handleUrlImport = async () => {
     const url = prompt('Enter image URL:');
