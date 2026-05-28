@@ -1,5 +1,3 @@
-# main.py (FULL CLEAN VERSION)
-print("MAIN STARTED")
 
 import os
 import base64
@@ -13,38 +11,25 @@ from typing import Optional
 
 from PIL import Image
 
-from fastapi import (
-    FastAPI,
-    HTTPException,
-    Depends,
-    UploadFile,
-    File,
-)
-
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
-
 from sqlalchemy.orm import Session
 
-try:
-    from database import (
-        init_db,
-        get_db,
-        Category,
-        Product,
-        Order,
-        OrderItem,
-        Message,
-    )
+from database import (
+    init_db,
+    get_db,
+    Category,
+    Product,
+    Order,
+    OrderItem,
+    Message,
+)
 
-    print("DATABASE IMPORT OK")
-
-except Exception as e:
-    print("DATABASE IMPORT ERROR:", e)
-    raise e
+print("MAIN STARTED")
 
 
 # =========================================================
@@ -66,21 +51,24 @@ app.add_middleware(
 # =========================================================
 # DATABASE
 # =========================================================
-try:
-    init_db()
-    print("DATABASE INIT OK")
 
-except Exception as e:
-    print("DATABASE INIT FAILED:", e)
-    raise e
+init_db()
 
 
 # =========================================================
-# UPLOADS
+# FOLDERS
 # =========================================================
 
 UPLOADS_DIR = Path("uploads")
 UPLOADS_DIR.mkdir(exist_ok=True)
+
+STATIC_DIR = Path("static")
+STATIC_DIR.mkdir(exist_ok=True)
+
+index_file = STATIC_DIR / "index.html"
+
+if not index_file.exists():
+    index_file.write_text("<h1>NJ Store API Running</h1>")
 
 
 # =========================================================
@@ -136,7 +124,6 @@ class Base64Image(BaseModel):
 # HELPERS
 # =========================================================
 
-
 def _product_dict(p):
     return {
         "id": p.id,
@@ -148,7 +135,6 @@ def _product_dict(p):
         "stock": p.stock,
         "featured": p.featured,
     }
-
 
 
 def _order_dict(o, db):
@@ -171,7 +157,6 @@ def _order_dict(o, db):
             for i in items
         ],
     }
-
 
 
 def _message_dict(m):
@@ -306,102 +291,53 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
 
 @app.post("/api/upload")
 async def upload_image(file: UploadFile = File(...)):
-    """Upload image from file"""
 
-    try:
-        ext = Path(file.filename).suffix or ".jpg"
+    ext = Path(file.filename).suffix or ".jpg"
 
-        filename = f"{uuid.uuid4()}{ext}"
+    filename = f"{uuid.uuid4()}{ext}"
 
-        save_path = UPLOADS_DIR / filename
+    save_path = UPLOADS_DIR / filename
 
-        with open(save_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
+    with open(save_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
 
-        return {
-            "url": f"/uploads/{filename}"
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"url": f"/uploads/{filename}"}
 
 
 @app.post("/api/upload-base64")
 async def upload_base64_image(payload: Base64Image):
-    """Upload image from base64"""
 
-    try:
-        base64_data = payload.data
+    base64_data = payload.data
 
-        if "," in base64_data:
-            base64_data = base64_data.split(",")[1]
+    if "," in base64_data:
+        base64_data = base64_data.split(",")[1]
 
-        image_data = base64.b64decode(base64_data)
+    image_data = base64.b64decode(base64_data)
 
-        filename = f"{uuid.uuid4()}.jpg"
+    filename = f"{uuid.uuid4()}.jpg"
 
-        save_path = UPLOADS_DIR / filename
+    save_path = UPLOADS_DIR / filename
 
-        with open(save_path, "wb") as f:
-            f.write(image_data)
+    with open(save_path, "wb") as f:
+        f.write(image_data)
 
-        return {
-            "url": f"/uploads/{filename}"
-        }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid base64 image: {str(e)}",
-        )
+    return {"url": f"/uploads/{filename}"}
 
 
 @app.post("/api/upload-url")
 async def upload_image_url(data: ImageUrlRequest):
-    """Upload image from external URL"""
 
-    try:
-        headers = {
-            "User-Agent": "Mozilla/5.0"
-        }
+    response = requests.get(data.url, timeout=15)
 
-        response = requests.get(
-            data.url,
-            headers=headers,
-            timeout=15,
-        )
+    image = Image.open(BytesIO(response.content))
 
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot fetch image",
-            )
+    filename = f"{uuid.uuid4()}.jpg"
 
-        content_type = response.headers.get(
-            "content-type",
-            "",
-        )
+    save_path = UPLOADS_DIR / filename
 
-        if not content_type.startswith("image/"):
-            raise HTTPException(
-                status_code=400,
-                detail="URL is not an image",
-            )
+    image.convert("RGB").save(save_path)
 
-        image = Image.open(BytesIO(response.content))
-
-        filename = f"{uuid.uuid4()}.jpg"
-
-        save_path = UPLOADS_DIR / filename
-
-        image.convert("RGB").save(save_path)
-
-        return {
-            "url": f"/uploads/{filename}"
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"url": f"/uploads/{filename}"}
 
 
 # =========================================================
@@ -441,32 +377,8 @@ def create_order(body: OrderCreate, db: Session = Depends(get_db)):
             )
         )
 
-        p = db.query(Product).filter(Product.id == item.product_id).first()
-
-        if p:
-            p.stock = max(0, p.stock - item.quantity)
-
     db.commit()
     db.refresh(order)
-
-    return _order_dict(order, db)
-
-
-@app.patch("/api/orders/{order_id}/status")
-def update_order_status(
-    order_id: int,
-    body: dict,
-    db: Session = Depends(get_db),
-):
-
-    order = db.query(Order).filter(Order.id == order_id).first()
-
-    if not order:
-        raise HTTPException(status_code=404, detail="Not found")
-
-    order.status = body.get("status", order.status)
-
-    db.commit()
 
     return _order_dict(order, db)
 
@@ -495,21 +407,6 @@ def create_message(body: MessageCreate, db: Session = Depends(get_db)):
     return _message_dict(m)
 
 
-@app.patch("/api/messages/{message_id}/read")
-def mark_message_read(message_id: int, db: Session = Depends(get_db)):
-
-    m = db.query(Message).filter(Message.id == message_id).first()
-
-    if not m:
-        raise HTTPException(status_code=404, detail="Not found")
-
-    m.is_read = True
-
-    db.commit()
-
-    return _message_dict(m)
-
-
 # =========================================================
 # STATS
 # =========================================================
@@ -523,15 +420,12 @@ def get_stats(db: Session = Depends(get_db)):
         "total_products": db.query(Product).count(),
         "total_orders": db.query(Order).count(),
         "total_messages": db.query(Message).count(),
-        "unread_messages": db.query(Message)
-        .filter(Message.is_read == False)
-        .count(),
         "total_revenue": sum(float(o.total) for o in orders),
     }
 
 
 # =========================================================
-# SERVE UPLOADS
+# FILES
 # =========================================================
 
 @app.get("/uploads/{filename}")
