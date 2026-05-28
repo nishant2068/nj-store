@@ -115,6 +115,7 @@ def _product_dict(p):
 
 @app.post("/api/upload")
 async def upload_image(file: UploadFile = File(...)):
+    """Upload image from file"""
     ext = Path(file.filename).suffix or ".jpg"
     filename = f"{uuid.uuid4()}{ext}"
     save_path = UPLOADS_DIR / filename
