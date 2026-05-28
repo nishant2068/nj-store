@@ -1,6 +1,6 @@
 # main.py (FULL CLEAN VERSION)
 
-```python
+
 import os
 import base64
 import shutil
@@ -542,94 +542,3 @@ app.mount(
     StaticFiles(directory="static", html=True),
     name="static",
 )
-```
-
----
-
-# requirements.txt
-
-```txt
-fastapi
-uvicorn
-sqlalchemy
-pydantic
-python-multipart
-requests
-pillow
-```
-
----
-
-# render.yaml
-
-```yaml
-services:
-  - type: web
-    name: nj-store
-    env: python
-    plan: free
-
-    buildCommand: pip install -r requirements.txt
-
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-
-    envVars:
-      - key: DB_URL
-        scope: run
-
-      - key: ADMIN_PIN
-        scope: run
-```
-
----
-
-# React Fix — Replace ONLY handleUrlImport()
-
-```javascript
-const handleUrlImport = async () => {
-  const url = prompt('Enter image URL:');
-
-  if (!url) return;
-
-  setLoading(true);
-
-  try {
-    const response = await fetch('/api/upload-url', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.detail || 'Upload failed');
-    }
-
-    setImageUrl(data.url);
-    setPreview(data.url);
-    onImageUrl(data.url);
-    setUploadMode(null);
-
-  } catch (error) {
-    alert('Failed: ' + error.message);
-  } finally {
-    setLoading(false);
-  }
-};
-```
-
----
-
-# Replace in GitHub
-
-Replace:
-
-* main.py
-* requirements.txt
-* render.yaml
-* handleUrlImport() in ProductImageUpload.jsx
-
-Then redeploy on Render.
