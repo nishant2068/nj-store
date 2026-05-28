@@ -13,7 +13,6 @@ ADMIN_PIN = os.getenv("ADMIN_PIN", "nj2024")
 
 app = FastAPI(title="NJ Store API")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
