@@ -1,1107 +1,252 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NJ Store - Admin Panel</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f3f4f6;
-            color: #1f2937;
-        }
-
-        /* ===== LOGIN PAGE ===== */
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .login-box {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .login-box h1 {
-            font-size: 1.875rem;
-            margin-bottom: 0.5rem;
-            text-align: center;
-        }
-
-        .login-box p {
-            text-align: center;
-            color: #6b7280;
-            margin-bottom: 2rem;
-        }
-
-        .input-group {
-            margin-bottom: 1rem;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #374151;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 0.75rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .error-message {
-            color: #dc2626;
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-            display: none;
-        }
-
-        /* ===== DASHBOARD ===== */
-        .dashboard {
-            display: none;
-        }
-
-        .top-bar {
-            background: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .top-bar h1 {
-            font-size: 1.5rem;
-        }
-
-        .logout-btn {
-            background: #ef4444;
-            color: white;
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .logout-btn:hover {
-            background: #dc2626;
-        }
-
-        .container {
-            display: flex;
-            min-height: calc(100vh - 60px);
-        }
-
-        .sidebar {
-            width: 250px;
-            background: white;
-            padding: 1.5rem 0;
-            box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar-item {
-            padding: 1rem 1.5rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-left: 4px solid transparent;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .sidebar-item:hover {
-            background: #f3f4f6;
-            color: #667eea;
-        }
-
-        .sidebar-item.active {
-            background: #f3f4f6;
-            border-left-color: #667eea;
-            color: #667eea;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-        }
-
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        /* ===== STATS ===== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-label {
-            color: #6b7280;
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1f2937;
-        }
-
-        .stat-card.primary { border-top: 4px solid #667eea; }
-        .stat-card.success { border-top: 4px solid #10b981; }
-        .stat-card.warning { border-top: 4px solid #f59e0b; }
-        .stat-card.danger { border-top: 4px solid #ef4444; }
-
-        /* ===== TABLE ===== */
-        .table-container {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        table thead {
-            background: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        table th {
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        table td {
-            padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        table tbody tr:hover {
-            background: #f9fafb;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-pending { background: #fef3c7; color: #92400e; }
-        .status-confirmed { background: #dbeafe; color: #1e40af; }
-        .status-shipped { background: #dbeafe; color: #1e40af; }
-        .status-delivered { background: #dcfce7; color: #166534; }
-
-        .btn-small {
-            padding: 0.5rem 0.75rem;
-            margin: 0 0.25rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .btn-edit { background: #3b82f6; color: white; }
-        .btn-delete { background: #ef4444; color: white; }
-        .btn-edit:hover { background: #2563eb; }
-        .btn-delete:hover { background: #dc2626; }
-
-        /* ===== FORM ===== */
-        .form-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-section h2 {
-            margin-bottom: 1.5rem;
-            font-size: 1.5rem;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #374151;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 1rem;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .btn-success {
-            background: #10b981;
-            color: white;
-            flex: 1;
-        }
-
-        .btn-success:hover {
-            background: #059669;
-        }
-
-        .btn-cancel {
-            background: #e5e7eb;
-            color: #374151;
-            flex: 1;
-        }
-
-        .btn-cancel:hover {
-            background: #d1d5db;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6b7280;
-        }
-
-        .message {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: none;
-        }
-
-        .message.success {
-            background: #dcfce7;
-            color: #166534;
-            display: block;
-        }
-
-        .message.error {
-            background: #fee2e2;
-            color: #991b1b;
-            display: block;
-        }
-
-        .loading {
-            text-align: center;
-            color: #6b7280;
-            padding: 2rem;
-        }
-
-        .spinner {
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #6b7280;
-        }
-
-        .empty-state h3 {
-            font-size: 1.125rem;
-            margin-bottom: 0.5rem;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                display: flex;
-                overflow-x: auto;
-                border-bottom: 1px solid #e5e7eb;
-                padding: 0;
-            }
-
-            .sidebar-item {
-                white-space: nowrap;
-                border-left: none;
-                border-bottom: 4px solid transparent;
-                padding: 1rem;
-            }
-
-            .sidebar-item.active {
-                border-left: none;
-                border-bottom-color: #667eea;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .main-content {
-                padding: 1rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- LOGIN SECTION -->
-    <div id="loginSection" class="login-container">
-        <div class="login-box">
-            <h1>🛍️ NJ Store</h1>
-            <p>Admin Panel</p>
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="input-group">
-                    <label for="pin">Admin PIN</label>
-                    <input type="password" id="pin" placeholder="Enter your PIN" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Login</button>
-                <div class="error-message" id="loginError"></div>
-            </form>
+<!-- REPLACE ONLY THIS PART INSIDE PRODUCT FORM -->
+
+<div class="form-group">
+    <label>Image URL</label>
+
+    <input
+        type="text"
+        id="productImage"
+        placeholder="Image URL will appear here"
+        style="margin-bottom:10px;"
+    >
+
+    <!-- Preview -->
+    <img
+        id="imagePreview"
+        src=""
+        alt="Preview"
+        style="width:100%;max-height:220px;object-fit:contain;border:1px solid #ddd;border-radius:8px;display:none;margin-bottom:10px;"
+    >
+
+    <!-- URL Button -->
+    <button
+        type="button"
+        class="btn btn-primary"
+        onclick="importImageFromUrl()"
+        style="margin-bottom:10px;"
+    >
+        Import From URL
+    </button>
+
+    <!-- File Upload -->
+    <input
+        type="file"
+        id="imageFileInput"
+        accept="image/*"
+        style="display:none"
+        onchange="uploadImageFile(event)"
+    >
+
+    <button
+        type="button"
+        class="btn btn-success"
+        onclick="document.getElementById('imageFileInput').click()"
+        style="margin-bottom:10px;"
+    >
+        Upload From Device
+    </button>
+
+    <!-- Camera -->
+    <div style="margin-top:10px;">
+        <video
+            id="cameraVideo"
+            autoplay
+            playsinline
+            style="width:100%;border-radius:8px;display:none;background:black;"
+        ></video>
+
+        <canvas
+            id="cameraCanvas"
+            style="display:none;"
+        ></canvas>
+
+        <div style="display:flex;gap:10px;margin-top:10px;">
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="startCamera()"
+            >
+                Start Camera
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-success"
+                onclick="capturePhoto()"
+            >
+                Capture
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-cancel"
+                onclick="stopCamera()"
+            >
+                Stop
+            </button>
         </div>
     </div>
-
-    <!-- DASHBOARD SECTION -->
-    <div id="dashboardSection" class="dashboard">
-        <div class="top-bar">
-            <h1>NJ Store Admin</h1>
-            <button class="logout-btn" onclick="handleLogout()">Logout</button>
-        </div>
-
-        <div class="container">
-            <div class="sidebar">
-                <div class="sidebar-item active" onclick="showSection('dashboard')">📊 Dashboard</div>
-                <div class="sidebar-item" onclick="showSection('products')">📦 Products</div>
-                <div class="sidebar-item" onclick="showSection('orders')">🛒 Orders</div>
-                <div class="sidebar-item" onclick="showSection('messages')">💬 Messages</div>
-            </div>
-
-            <div class="main-content">
-                <!-- DASHBOARD SECTION -->
-                <div id="dashboard" class="section active">
-                    <h2>Dashboard</h2>
-                    <div class="stats-grid" id="statsGrid">
-                        <div class="loading"><div class="spinner"></div>Loading stats...</div>
-                    </div>
-                </div>
-
-                <!-- PRODUCTS SECTION -->
-                <div id="products" class="section">
-                    <div style="margin-bottom: 1.5rem;">
-                        <h2>📦 Products</h2>
-                        <button class="btn btn-primary" onclick="openProductForm()" style="width: auto; margin-top: 1rem;">+ Add Product</button>
-                    </div>
-
-                    <div class="message" id="productMessage"></div>
-
-                    <div class="table-container">
-                        <table id="productsTable">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Category</th>
-                                    <th>Price (₹)</th>
-                                    <th>Stock</th>
-                                    <th>Featured</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="productsBody">
-                                <tr><td colspan="6" class="loading"><div class="spinner"></div>Loading products...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- ORDERS SECTION -->
-                <div id="orders" class="section">
-                    <h2>🛒 Orders</h2>
-                    <div class="message" id="orderMessage"></div>
-
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>Customer</th>
-                                    <th>Total (₹)</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ordersBody">
-                                <tr><td colspan="6" class="loading"><div class="spinner"></div>Loading orders...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- MESSAGES SECTION -->
-                <div id="messages" class="section">
-                    <h2>💬 Messages</h2>
-                    <div class="message" id="messageMessage"></div>
-
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>From</th>
-                                    <th>Type</th>
-                                    <th>Subject</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="messagesBody">
-                                <tr><td colspan="6" class="loading"><div class="spinner"></div>Loading messages...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- PRODUCT FORM MODAL -->
-    <div id="productModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span id="productModalTitle">Add Product</span>
-                <button class="close-btn" onclick="closeProductForm()">&times;</button>
-            </div>
-            <form id="productForm" onsubmit="handleProductSubmit(event)">
-                <div class="form-group">
-                    <label>Product Name *</label>
-                    <input type="text" id="productName" required>
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="productDescription"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Category *</label>
-                    <select id="productCategory" required>
-                        <option value="">Select Category</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Price (₹) *</label>
-                    <input type="number" id="productPrice" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label>Stock</label>
-                    <input type="number" id="productStock" value="0">
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="productFeatured"> Featured Product
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>Image URL</label>
-                    <input type="text" id="productImage">
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-success">Save Product</button>
-                    <button type="button" class="btn btn-cancel" onclick="closeProductForm()">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- ORDER STATUS MODAL -->
-    <div id="orderModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                Update Order Status
-                <button class="close-btn" onclick="closeOrderModal()">&times;</button>
-            </div>
-            <form id="orderForm" onsubmit="handleOrderStatusSubmit(event)">
-                <div class="form-group">
-                    <label>Order ID</label>
-                    <input type="text" id="orderModalId" disabled>
-                </div>
-                <div class="form-group">
-                    <label>Status *</label>
-                    <select id="orderStatus" required>
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-success">Update Status</button>
-                    <button type="button" class="btn btn-cancel" onclick="closeOrderModal()">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MESSAGE DETAIL MODAL -->
-    <div id="messageModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                Message Details
-                <button class="close-btn" onclick="closeMessageModal()">&times;</button>
-            </div>
-            <div id="messageContent"></div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-success" onclick="markMessageRead()">Mark as Read</button>
-                <button type="button" class="btn btn-cancel" onclick="closeMessageModal()">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const API_URL = '';
-
-        // ===== AUTH =====
-        async function handleLogin(e) {
-            e.preventDefault();
-            const pin = document.getElementById('pin').value;
-            const errorEl = document.getElementById('loginError');
-            errorEl.style.display = 'none';
-
-            try {
-                const res = await fetch(`${API_URL}/api/admin/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pin })
-                });
-
-                if (!res.ok) {
-                    errorEl.textContent = 'Invalid PIN';
-                    errorEl.style.display = 'block';
-                    return;
-                }
-
-                localStorage.setItem('adminToken', 'true');
-                showDashboard();
-                loadStats();
-                loadProducts();
-                loadCategories();
-                loadOrders();
-                loadMessages();
-            } catch (err) {
-                errorEl.textContent = 'Connection error';
-                errorEl.style.display = 'block';
-            }
-        }
-
-        function handleLogout() {
-            localStorage.removeItem('adminToken');
-            document.getElementById('loginSection').style.display = 'flex';
-            document.getElementById('dashboardSection').style.display = 'none';
-            document.getElementById('pin').value = '';
-        }
-
-        function isAuthenticated() {
-            return localStorage.getItem('adminToken') === 'true';
-        }
-
-        function showDashboard() {
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('dashboardSection').style.display = 'block';
-        }
-
-        function showSection(sectionId) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-            
-            document.getElementById(sectionId).classList.add('active');
-            event.target.classList.add('active');
-
-            if (sectionId === 'dashboard') loadStats();
-            if (sectionId === 'products') loadProducts();
-            if (sectionId === 'orders') loadOrders();
-            if (sectionId === 'messages') loadMessages();
-        }
-
-        // ===== STATS =====
-        async function loadStats() {
-            try {
-                const res = await fetch(`${API_URL}/api/stats`);
-                const stats = await res.json();
-
-                document.getElementById('statsGrid').innerHTML = `
-                    <div class="stat-card primary">
-                        <div class="stat-label">Total Products</div>
-                        <div class="stat-value">${stats.total_products}</div>
-                    </div>
-                    <div class="stat-card success">
-                        <div class="stat-label">Total Orders</div>
-                        <div class="stat-value">${stats.total_orders}</div>
-                    </div>
-                    <div class="stat-card warning">
-                        <div class="stat-label">Total Revenue</div>
-                        <div class="stat-value">₹${stats.total_revenue.toFixed(2)}</div>
-                    </div>
-                    <div class="stat-card danger">
-                        <div class="stat-label">Unread Messages</div>
-                        <div class="stat-value">${stats.unread_messages}</div>
-                    </div>
-                `;
-            } catch (err) {
-                console.error('Error loading stats:', err);
-            }
-        }
-
-        // ===== CATEGORIES =====
-        async function loadCategories() {
-            try {
-                const res = await fetch(`${API_URL}/api/categories`);
-                const cats = await res.json();
-
-                const select = document.getElementById('productCategory');
-                select.innerHTML = '<option value="">Select Category</option>';
-                cats.forEach(c => {
-                    select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-                });
-            } catch (err) {
-                console.error('Error loading categories:', err);
-            }
-        }
-
-        // ===== PRODUCTS =====
-        let currentProductId = null;
-
-        async function loadProducts() {
-            try {
-                const res = await fetch(`${API_URL}/api/products`);
-                const products = await res.json();
-
-                let html = '';
-                if (products.length === 0) {
-                    html = '<tr><td colspan="6" class="empty-state"><h3>No products yet</h3></td></tr>';
-                } else {
-                    products.forEach(p => {
-                        html += `
-                            <tr>
-                                <td><strong>${p.name}</strong></td>
-                                <td>${p.category_id}</td>
-                                <td>₹${p.price.toFixed(2)}</td>
-                                <td>${p.stock}</td>
-                                <td>${p.featured ? '⭐' : '-'}</td>
-                                <td>
-                                    <button class="btn-small btn-edit" onclick="editProduct(${p.id})">Edit</button>
-                                    <button class="btn-small btn-delete" onclick="deleteProduct(${p.id})">Delete</button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-                document.getElementById('productsBody').innerHTML = html;
-            } catch (err) {
-                console.error('Error loading products:', err);
-            }
-        }
-
-        function openProductForm() {
-            currentProductId = null;
-            document.getElementById('productModalTitle').textContent = 'Add Product';
-            document.getElementById('productForm').reset();
-            document.getElementById('productModal').classList.add('active');
-        }
-
-        async function editProduct(id) {
-            try {
-                const res = await fetch(`${API_URL}/api/products/${id}`);
-                const p = await res.json();
-
-                currentProductId = id;
-                document.getElementById('productModalTitle').textContent = 'Edit Product';
-                document.getElementById('productName').value = p.name;
-                document.getElementById('productDescription').value = p.description;
-                document.getElementById('productCategory').value = p.category_id;
-                document.getElementById('productPrice').value = p.price;
-                document.getElementById('productStock').value = p.stock;
-                document.getElementById('productFeatured').checked = p.featured;
-                document.getElementById('productImage').value = p.image_url;
-                document.getElementById('productModal').classList.add('active');
-            } catch (err) {
-                alert('Error loading product');
-            }
-        }
-
-        async function handleProductSubmit(e) {
-            e.preventDefault();
-
-            const product = {
-                name: document.getElementById('productName').value,
-                description: document.getElementById('productDescription').value,
-                category_id: parseInt(document.getElementById('productCategory').value),
-                price: parseFloat(document.getElementById('productPrice').value),
-                stock: parseInt(document.getElementById('productStock').value),
-                featured: document.getElementById('productFeatured').checked,
-                image_url: document.getElementById('productImage').value
-            };
-
-            try {
-                const method = currentProductId ? 'PUT' : 'POST';
-                const url = currentProductId 
-                    ? `${API_URL}/api/products/${currentProductId}`
-                    : `${API_URL}/api/products`;
-
-                const res = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(product)
-                });
-
-                if (!res.ok) throw new Error('Failed to save product');
-
-                showMessage('productMessage', `Product ${currentProductId ? 'updated' : 'created'} successfully!`, 'success');
-                closeProductForm();
-                loadProducts();
-            } catch (err) {
-                showMessage('productMessage', 'Error saving product: ' + err.message, 'error');
-            }
-        }
-
-        function closeProductForm() {
-            document.getElementById('productModal').classList.remove('active');
-        }
-
-        async function deleteProduct(id) {
-            if (!confirm('Are you sure?')) return;
-
-            try {
-                const res = await fetch(`${API_URL}/api/products/${id}`, { method: 'DELETE' });
-                if (!res.ok) throw new Error('Failed to delete');
-
-                showMessage('productMessage', 'Product deleted successfully!', 'success');
-                loadProducts();
-            } catch (err) {
-                showMessage('productMessage', 'Error deleting product', 'error');
-            }
-        }
-
-        // ===== ORDERS =====
-        let currentOrderId = null;
-
-        async function loadOrders() {
-            try {
-                const res = await fetch(`${API_URL}/api/orders`);
-                const orders = await res.json();
-
-                let html = '';
-                if (orders.length === 0) {
-                    html = '<tr><td colspan="6" class="empty-state"><h3>No orders yet</h3></td></tr>';
-                } else {
-                    orders.forEach(o => {
-                        const date = new Date(o.created_at).toLocaleDateString();
-                        html += `
-                            <tr>
-                                <td>#${o.id}</td>
-                                <td>${o.customer_name}<br><small>${o.customer_phone}</small></td>
-                                <td>₹${o.total.toFixed(2)}</td>
-                                <td><span class="status-badge status-${o.status}">${o.status}</span></td>
-                                <td>${date}</td>
-                                <td>
-                                    <button class="btn-small btn-edit" onclick="editOrder(${o.id}, '${o.status}')">Update</button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-                document.getElementById('ordersBody').innerHTML = html;
-            } catch (err) {
-                console.error('Error loading orders:', err);
-            }
-        }
-
-        function editOrder(id, status) {
-            currentOrderId = id;
-            document.getElementById('orderModalId').value = id;
-            document.getElementById('orderStatus').value = status;
-            document.getElementById('orderModal').classList.add('active');
-        }
-
-        async function handleOrderStatusSubmit(e) {
-            e.preventDefault();
-
-            try {
-                const res = await fetch(`${API_URL}/api/orders/${currentOrderId}/status`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: document.getElementById('orderStatus').value })
-                });
-
-                if (!res.ok) throw new Error('Failed to update order');
-
-                showMessage('orderMessage', 'Order updated successfully!', 'success');
-                closeOrderModal();
-                loadOrders();
-            } catch (err) {
-                showMessage('orderMessage', 'Error updating order', 'error');
-            }
-        }
-
-        function closeOrderModal() {
-            document.getElementById('orderModal').classList.remove('active');
-        }
-
-        // ===== MESSAGES =====
-        let currentMessageId = null;
-
-        async function loadMessages() {
-            try {
-                const res = await fetch(`${API_URL}/api/messages`);
-                const messages = await res.json();
-
-                let html = '';
-                if (messages.length === 0) {
-                    html = '<tr><td colspan="6" class="empty-state"><h3>No messages yet</h3></td></tr>';
-                } else {
-                    messages.forEach(m => {
-                        const date = new Date(m.created_at).toLocaleDateString();
-                        html += `
-                            <tr>
-                                <td>${m.sender_name}<br><small>${m.sender_phone}</small></td>
-                                <td>${m.message_type}</td>
-                                <td>${m.subject}</td>
-                                <td>${m.is_read ? '✅ Read' : '📌 Unread'}</td>
-                                <td>${date}</td>
-                                <td>
-                                    <button class="btn-small btn-edit" onclick="viewMessage(${m.id})">View</button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-                document.getElementById('messagesBody').innerHTML = html;
-            } catch (err) {
-                console.error('Error loading messages:', err);
-            }
-        }
-
-        async function viewMessage(id) {
-            try {
-                const res = await fetch(`${API_URL}/api/messages`);
-                const messages = await res.json();
-                const msg = messages.find(m => m.id === id);
-
-                if (!msg) return;
-
-                currentMessageId = id;
-                document.getElementById('messageContent').innerHTML = `
-                    <div style="line-height: 1.8;">
-                        <p><strong>From:</strong> ${msg.sender_name}</p>
-                        <p><strong>Phone:</strong> ${msg.sender_phone}</p>
-                        <p><strong>Type:</strong> ${msg.message_type}</p>
-                        <p><strong>Subject:</strong> ${msg.subject}</p>
-                        <p><strong>Message:</strong></p>
-                        <p style="background: #f3f4f6; padding: 1rem; border-radius: 8px;">${msg.body}</p>
-                        <p><strong>Status:</strong> ${msg.is_read ? '✅ Read' : '📌 Unread'}</p>
-                    </div>
-                `;
-                document.getElementById('messageModal').classList.add('active');
-            } catch (err) {
-                alert('Error loading message');
-            }
-        }
-
-        async function markMessageRead() {
-            try {
-                const res = await fetch(`${API_URL}/api/messages/${currentMessageId}/read`, {
-                    method: 'PATCH'
-                });
-
-                if (!res.ok) throw new Error('Failed to mark as read');
-
-                showMessage('messageMessage', 'Message marked as read!', 'success');
-                closeMessageModal();
-                loadMessages();
-            } catch (err) {
-                alert('Error marking message as read');
-            }
-        }
-
-        function closeMessageModal() {
-            document.getElementById('messageModal').classList.remove('active');
-        }
-
-        // ===== UTILITIES =====
-        function showMessage(elementId, text, type) {
-            const el = document.getElementById(elementId);
-            el.textContent = text;
-            el.className = `message ${type}`;
-            setTimeout(() => {
-                el.className = 'message';
-                el.textContent = '';
-            }, 4000);
-        }
-
-        // ===== INIT =====
-        window.addEventListener('load', () => {
-            if (isAuthenticated()) {
-                showDashboard();
-                loadStats();
-                loadProducts();
-                loadCategories();
-                loadOrders();
-                loadMessages();
-            } else {
-                document.getElementById('loginSection').style.display = 'flex';
-            }
+</div>
+
+<script>
+let cameraStream = null;
+
+// ============================
+// IMAGE PREVIEW
+// ============================
+
+function setImagePreview(url) {
+    const preview = document.getElementById('imagePreview');
+
+    if (!url) {
+        preview.style.display = 'none';
+        preview.src = '';
+        return;
+    }
+
+    preview.src = url;
+    preview.style.display = 'block';
+}
+
+// Live preview when typing
+document.addEventListener('input', (e) => {
+    if (e.target.id === 'productImage') {
+        setImagePreview(e.target.value);
+    }
+});
+
+// ============================
+// IMPORT FROM URL
+// ============================
+
+async function importImageFromUrl() {
+    const url = prompt('Enter image URL');
+
+    if (!url) return;
+
+    try {
+        const res = await fetch('/api/upload-url', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url })
         });
 
-        // Close modals when clicking outside
-        window.onclick = (e) => {
-            if (e.target === document.getElementById('productModal')) {
-                closeProductForm();
-            }
-            if (e.target === document.getElementById('orderModal')) {
-                closeOrderModal();
-            }
-            if (e.target === document.getElementById('messageModal')) {
-                closeMessageModal();
-            }
-        };
-    </script>
-</body>
-</html>
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.detail || 'Upload failed');
+            return;
+        }
+
+        document.getElementById('productImage').value = data.url;
+        setImagePreview(data.url);
+
+    } catch (err) {
+        alert('Error importing image');
+    }
+}
+
+// ============================
+// FILE UPLOAD
+// ============================
+
+async function uploadImageFile(event) {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert('Upload failed');
+            return;
+        }
+
+        document.getElementById('productImage').value = data.url;
+        setImagePreview(data.url);
+
+    } catch (err) {
+        alert('Upload error');
+    }
+}
+
+// ============================
+// CAMERA
+// ============================
+
+async function startCamera() {
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: true
+        });
+
+        const video = document.getElementById('cameraVideo');
+
+        video.srcObject = cameraStream;
+        video.style.display = 'block';
+
+    } catch (err) {
+        alert('Camera access denied');
+    }
+}
+
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+    }
+
+    document.getElementById('cameraVideo').style.display = 'none';
+}
+
+async function capturePhoto() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+
+    ctx.drawImage(video, 0, 0);
+
+    const base64 = canvas.toDataURL('image/jpeg');
+
+    try {
+        const res = await fetch('/api/upload-base64', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                data: base64
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert('Camera upload failed');
+            return;
+        }
+
+        document.getElementById('productImage').value = data.url;
+        setImagePreview(data.url);
+
+        stopCamera();
+
+    } catch (err) {
+        alert('Capture failed');
+    }
+}
+</script>
