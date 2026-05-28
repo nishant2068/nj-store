@@ -30,7 +30,6 @@ th,td{padding:10px;border-bottom:1px solid #eee;}
 
 input,select{width:100%;padding:8px;margin:5px 0;}
 button{cursor:pointer;}
-
 </style>
 </head>
 
@@ -56,7 +55,7 @@ button{cursor:pointer;}
 <div class="container">
 
 <div class="side">
-<button onclick="tab('home')" class="active">Dashboard</button>
+<button onclick="tab('home')">Dashboard</button>
 <button onclick="tab('products')">Products</button>
 <button onclick="tab('orders')">Orders</button>
 <button onclick="tab('messages')">Messages</button>
@@ -74,7 +73,9 @@ button{cursor:pointer;}
 <input id="search" placeholder="Search products..." oninput="loadProducts()">
 <button onclick="openModal()">+ Add Product</button>
 <table>
-<thead><tr><th>Name</th><th>Price</th><th>Stock</th><th></th></tr></thead>
+<thead>
+<tr><th>Name</th><th>Price</th><th>Stock</th><th></th></tr>
+</thead>
 <tbody id="plist"></tbody>
 </table>
 </div>
@@ -82,7 +83,9 @@ button{cursor:pointer;}
 <!-- ORDERS -->
 <div id="orders" style="display:none;">
 <table>
-<thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr></thead>
+<thead>
+<tr><th>ID</th><th>Customer</th><th>Total</th><th>Status</th></tr>
+</thead>
 <tbody id="olist"></tbody>
 </table>
 </div>
@@ -90,7 +93,9 @@ button{cursor:pointer;}
 <!-- MESSAGES -->
 <div id="messages" style="display:none;">
 <table>
-<thead><tr><th>Name</th><th>Subject</th><th>Status</th><th></th></tr></thead>
+<thead>
+<tr><th>Name</th><th>Subject</th><th>Status</th></tr>
+</thead>
 <tbody id="mlist"></tbody>
 </table>
 </div>
@@ -103,6 +108,7 @@ button{cursor:pointer;}
 <div class="modal" id="modal">
 <div class="mbox">
 <h3>Product</h3>
+
 <input id="n" placeholder="Name">
 <input id="p" placeholder="Price">
 <input id="s" placeholder="Stock">
@@ -115,27 +121,32 @@ button{cursor:pointer;}
 
 <script>
 
-const API="";
-
-let editId=null;
+const API = window.location.origin;
+let editId = null;
 
 /* LOGIN */
 async function login(){
-let r=await fetch(API+"/api/admin/login",{
+let pinValue = document.getElementById("pin").value;
+
+let r = await fetch(API+"/api/admin/login",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body:JSON.stringify({pin:pin.value})
+body:JSON.stringify({pin: pinValue})
 });
 
 if(r.ok){
-login.style.display="none";
-dash.style.display="block";
+document.getElementById("login").style.display="none";
+document.getElementById("dash").style.display="block";
+localStorage.setItem("admin","true");
 loadAll();
 }
 else alert("Wrong PIN");
 }
 
-function logout(){location.reload();}
+function logout(){
+localStorage.removeItem("admin");
+location.reload();
+}
 
 /* NAV */
 function tab(id){
@@ -153,9 +164,10 @@ loadMessages();
 
 /* STATS */
 async function loadStats(){
-let r=await fetch(API+"/api/stats");
-let d=await r.json();
-stats.innerHTML=`
+let r = await fetch(API+"/api/stats");
+let d = await r.json();
+
+document.getElementById("stats").innerHTML = `
 Products: ${d.total_products}<br>
 Orders: ${d.total_orders}<br>
 Revenue: ${d.total_revenue}<br>
@@ -165,52 +177,65 @@ Messages: ${d.total_messages}
 
 /* PRODUCTS */
 async function loadProducts(){
-let r=await fetch(API+"/api/products");
-let d=await r.json();
+let r = await fetch(API+"/api/products");
+let d = await r.json();
 
-let q=document.getElementById("search").value?.toLowerCase()||"";
+let q = document.getElementById("search").value?.toLowerCase() || "";
 
-plist.innerHTML=d
-.filter(p=>p.name.toLowerCase().includes(q))
-.map(p=>`
+document.getElementById("plist").innerHTML = d
+.filter(p => p.name.toLowerCase().includes(q))
+.map(p => `
 <tr>
 <td>${p.name}</td>
 <td>${p.price}</td>
 <td>${p.stock}</td>
 <td>
-<button onclick='edit(${JSON.stringify(p)})'>Edit</button>
-<button onclick='del(${p.id})'>X</button>
+<button onclick="edit(${p.id})">Edit</button>
+<button onclick="del(${p.id})">X</button>
 </td>
 </tr>
 `).join("");
 }
 
-function openModal(){modal.style.display="block";editId=null;}
-function closeM(){modal.style.display="none";}
-
-function edit(p){
-editId=p.id;
-n.value=p.name;
-p.value=p.price;
-s.value=p.stock;
-img.value=p.image_url;
-modal.style.display="block";
+function openModal(){
+document.getElementById("modal").style.display="block";
+editId=null;
 }
 
+function closeM(){
+document.getElementById("modal").style.display="none";
+}
+
+/* SAFE EDIT */
+async function edit(id){
+let r = await fetch(API+"/api/products/"+id);
+let p = await r.json();
+
+editId = p.id;
+
+document.getElementById("n").value = p.name;
+document.getElementById("p").value = p.price;
+document.getElementById("s").value = p.stock;
+document.getElementById("img").value = p.image_url || "";
+
+document.getElementById("modal").style.display="block";
+}
+
+/* SAVE PRODUCT */
 async function save(){
-let body={
-name:n.value,
-price:+p.value,
-stock:+s.value,
-category_id:1,
-image_url:img.value,
-description:""
+let body = {
+name: document.getElementById("n").value,
+price: +document.getElementById("p").value,
+stock: +document.getElementById("s").value,
+category_id: 1,
+image_url: document.getElementById("img").value,
+description: ""
 };
 
-let url=editId?`/api/products/${editId}`:"/api/products";
-let method=editId?"PUT":"POST";
+let url = editId ? `/api/products/${editId}` : "/api/products";
+let method = editId ? "PUT" : "POST";
 
-await fetch(API+url,{
+await fetch(API + url,{
 method,
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify(body)
@@ -220,6 +245,7 @@ closeM();
 loadProducts();
 }
 
+/* DELETE */
 async function del(id){
 await fetch(API+"/api/products/"+id,{method:"DELETE"});
 loadProducts();
@@ -227,61 +253,37 @@ loadProducts();
 
 /* ORDERS */
 async function loadOrders(){
-let r=await fetch(API+"/api/orders");
-let d=await r.json();
+let r = await fetch(API+"/api/orders");
+let d = await r.json();
 
-olist.innerHTML=d.map(o=>`
+document.getElementById("olist").innerHTML = d.map(o => `
 <tr>
 <td>${o.id}</td>
 <td>${o.customer_name}</td>
 <td>${o.total}</td>
 <td>${o.status}</td>
-<td>
-<select onchange="updateOrder(${o.id},this.value)">
-<option>${o.status}</option>
-<option>pending</option>
-<option>confirmed</option>
-<option>shipped</option>
-<option>delivered</option>
-</select>
-</td>
 </tr>
 `).join("");
-}
-
-async function updateOrder(id,status){
-await fetch(API+`/api/orders/${id}/status`,{
-method:"PATCH",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({status})
-});
 }
 
 /* MESSAGES */
 async function loadMessages(){
-let r=await fetch(API+"/api/messages");
-let d=await r.json();
+let r = await fetch(API+"/api/messages");
+let d = await r.json();
 
-mlist.innerHTML=d.map(m=>`
+document.getElementById("mlist").innerHTML = d.map(m => `
 <tr>
 <td>${m.sender_name}</td>
 <td>${m.subject}</td>
-<td>${m.is_read?"Read":"New"}</td>
-<td>
-<button onclick="mark(${m.id})">Mark</button>
-</td>
+<td>${m.is_read ? "Read" : "New"}</td>
 </tr>
 `).join("");
 }
 
-async function mark(id){
-await fetch(API+`/api/messages/${id}/read`,{method:"PATCH"});
-loadMessages();
-}
-
-if(localStorage.getItem("admin")){
-login.style.display="none";
-dash.style.display="block";
+/* AUTO LOGIN */
+if(localStorage.getItem("admin") === "true"){
+document.getElementById("login").style.display="none";
+document.getElementById("dash").style.display="block";
 loadAll();
 }
 
