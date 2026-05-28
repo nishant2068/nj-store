@@ -1,252 +1,291 @@
-<!-- REPLACE ONLY THIS PART INSIDE PRODUCT FORM -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NJ Admin Pro</title>
 
-<div class="form-group">
-    <label>Image URL</label>
+<style>
+body{margin:0;font-family:Arial;background:#f4f6f8;}
+.login{height:100vh;display:flex;justify-content:center;align-items:center;background:#667eea;}
+.box{background:#fff;padding:25px;border-radius:10px;width:320px;}
 
-    <input
-        type="text"
-        id="productImage"
-        placeholder="Image URL will appear here"
-        style="margin-bottom:10px;"
-    >
+.dashboard{display:none;}
+.top{background:#fff;padding:15px;display:flex;justify-content:space-between;}
 
-    <!-- Preview -->
-    <img
-        id="imagePreview"
-        src=""
-        alt="Preview"
-        style="width:100%;max-height:220px;object-fit:contain;border:1px solid #ddd;border-radius:8px;display:none;margin-bottom:10px;"
-    >
+.container{display:flex;height:calc(100vh - 60px);}
+.side{width:200px;background:#fff;padding:10px;}
+.side button{width:100%;padding:10px;margin-bottom:5px;border:none;background:#eee;}
+.side button.active{background:#667eea;color:#fff;}
 
-    <!-- URL Button -->
-    <button
-        type="button"
-        class="btn btn-primary"
-        onclick="importImageFromUrl()"
-        style="margin-bottom:10px;"
-    >
-        Import From URL
-    </button>
+.main{flex:1;padding:15px;overflow:auto;}
 
-    <!-- File Upload -->
-    <input
-        type="file"
-        id="imageFileInput"
-        accept="image/*"
-        style="display:none"
-        onchange="uploadImageFile(event)"
-    >
+.card{background:#fff;padding:10px;margin:10px 0;border-radius:8px;}
 
-    <button
-        type="button"
-        class="btn btn-success"
-        onclick="document.getElementById('imageFileInput').click()"
-        style="margin-bottom:10px;"
-    >
-        Upload From Device
-    </button>
+table{width:100%;background:#fff;border-collapse:collapse;}
+th,td{padding:10px;border-bottom:1px solid #eee;}
 
-    <!-- Camera -->
-    <div style="margin-top:10px;">
-        <video
-            id="cameraVideo"
-            autoplay
-            playsinline
-            style="width:100%;border-radius:8px;display:none;background:black;"
-        ></video>
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0008;}
+.mbox{background:#fff;width:400px;margin:60px auto;padding:15px;border-radius:10px;}
 
-        <canvas
-            id="cameraCanvas"
-            style="display:none;"
-        ></canvas>
+input,select{width:100%;padding:8px;margin:5px 0;}
+button{cursor:pointer;}
 
-        <div style="display:flex;gap:10px;margin-top:10px;">
-            <button
-                type="button"
-                class="btn btn-primary"
-                onclick="startCamera()"
-            >
-                Start Camera
-            </button>
+</style>
+</head>
 
-            <button
-                type="button"
-                class="btn btn-success"
-                onclick="capturePhoto()"
-            >
-                Capture
-            </button>
+<body>
 
-            <button
-                type="button"
-                class="btn btn-cancel"
-                onclick="stopCamera()"
-            >
-                Stop
-            </button>
-        </div>
-    </div>
+<!-- LOGIN -->
+<div class="login" id="login">
+<div class="box">
+<h2>Admin Login</h2>
+<input type="password" id="pin" placeholder="PIN">
+<button onclick="login()">Login</button>
+</div>
+</div>
+
+<!-- DASH -->
+<div class="dashboard" id="dash">
+
+<div class="top">
+<h3>NJ Admin</h3>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+<div class="side">
+<button onclick="tab('home')" class="active">Dashboard</button>
+<button onclick="tab('products')">Products</button>
+<button onclick="tab('orders')">Orders</button>
+<button onclick="tab('messages')">Messages</button>
+</div>
+
+<div class="main">
+
+<!-- HOME -->
+<div id="home">
+<div class="card" id="stats">Loading...</div>
+</div>
+
+<!-- PRODUCTS -->
+<div id="products" style="display:none;">
+<input id="search" placeholder="Search products..." oninput="loadProducts()">
+<button onclick="openModal()">+ Add Product</button>
+<table>
+<thead><tr><th>Name</th><th>Price</th><th>Stock</th><th></th></tr></thead>
+<tbody id="plist"></tbody>
+</table>
+</div>
+
+<!-- ORDERS -->
+<div id="orders" style="display:none;">
+<table>
+<thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr></thead>
+<tbody id="olist"></tbody>
+</table>
+</div>
+
+<!-- MESSAGES -->
+<div id="messages" style="display:none;">
+<table>
+<thead><tr><th>Name</th><th>Subject</th><th>Status</th><th></th></tr></thead>
+<tbody id="mlist"></tbody>
+</table>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="mbox">
+<h3>Product</h3>
+<input id="n" placeholder="Name">
+<input id="p" placeholder="Price">
+<input id="s" placeholder="Stock">
+<input id="img" placeholder="Image URL">
+
+<button onclick="save()">Save</button>
+<button onclick="closeM()">Close</button>
+</div>
 </div>
 
 <script>
-let cameraStream = null;
 
-// ============================
-// IMAGE PREVIEW
-// ============================
+const API="";
 
-function setImagePreview(url) {
-    const preview = document.getElementById('imagePreview');
+let editId=null;
 
-    if (!url) {
-        preview.style.display = 'none';
-        preview.src = '';
-        return;
-    }
-
-    preview.src = url;
-    preview.style.display = 'block';
-}
-
-// Live preview when typing
-document.addEventListener('input', (e) => {
-    if (e.target.id === 'productImage') {
-        setImagePreview(e.target.value);
-    }
+/* LOGIN */
+async function login(){
+let r=await fetch(API+"/api/admin/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({pin:pin.value})
 });
 
-// ============================
-// IMPORT FROM URL
-// ============================
-
-async function importImageFromUrl() {
-    const url = prompt('Enter image URL');
-
-    if (!url) return;
-
-    try {
-        const res = await fetch('/api/upload-url', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ url })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            alert(data.detail || 'Upload failed');
-            return;
-        }
-
-        document.getElementById('productImage').value = data.url;
-        setImagePreview(data.url);
-
-    } catch (err) {
-        alert('Error importing image');
-    }
+if(r.ok){
+login.style.display="none";
+dash.style.display="block";
+loadAll();
+}
+else alert("Wrong PIN");
 }
 
-// ============================
-// FILE UPLOAD
-// ============================
+function logout(){location.reload();}
 
-async function uploadImageFile(event) {
-    const file = event.target.files[0];
-
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-        const res = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            alert('Upload failed');
-            return;
-        }
-
-        document.getElementById('productImage').value = data.url;
-        setImagePreview(data.url);
-
-    } catch (err) {
-        alert('Upload error');
-    }
+/* NAV */
+function tab(id){
+document.querySelectorAll(".main > div").forEach(d=>d.style.display="none");
+document.getElementById(id).style.display="block";
 }
 
-// ============================
-// CAMERA
-// ============================
-
-async function startCamera() {
-    try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: true
-        });
-
-        const video = document.getElementById('cameraVideo');
-
-        video.srcObject = cameraStream;
-        video.style.display = 'block';
-
-    } catch (err) {
-        alert('Camera access denied');
-    }
+/* LOAD ALL */
+function loadAll(){
+loadStats();
+loadProducts();
+loadOrders();
+loadMessages();
 }
 
-function stopCamera() {
-    if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-    }
-
-    document.getElementById('cameraVideo').style.display = 'none';
+/* STATS */
+async function loadStats(){
+let r=await fetch(API+"/api/stats");
+let d=await r.json();
+stats.innerHTML=`
+Products: ${d.total_products}<br>
+Orders: ${d.total_orders}<br>
+Revenue: ${d.total_revenue}<br>
+Messages: ${d.total_messages}
+`;
 }
 
-async function capturePhoto() {
-    const video = document.getElementById('cameraVideo');
-    const canvas = document.getElementById('cameraCanvas');
+/* PRODUCTS */
+async function loadProducts(){
+let r=await fetch(API+"/api/products");
+let d=await r.json();
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+let q=document.getElementById("search").value?.toLowerCase()||"";
 
-    const ctx = canvas.getContext('2d');
-
-    ctx.drawImage(video, 0, 0);
-
-    const base64 = canvas.toDataURL('image/jpeg');
-
-    try {
-        const res = await fetch('/api/upload-base64', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                data: base64
-            })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            alert('Camera upload failed');
-            return;
-        }
-
-        document.getElementById('productImage').value = data.url;
-        setImagePreview(data.url);
-
-        stopCamera();
-
-    } catch (err) {
-        alert('Capture failed');
-    }
+plist.innerHTML=d
+.filter(p=>p.name.toLowerCase().includes(q))
+.map(p=>`
+<tr>
+<td>${p.name}</td>
+<td>${p.price}</td>
+<td>${p.stock}</td>
+<td>
+<button onclick='edit(${JSON.stringify(p)})'>Edit</button>
+<button onclick='del(${p.id})'>X</button>
+</td>
+</tr>
+`).join("");
 }
+
+function openModal(){modal.style.display="block";editId=null;}
+function closeM(){modal.style.display="none";}
+
+function edit(p){
+editId=p.id;
+n.value=p.name;
+p.value=p.price;
+s.value=p.stock;
+img.value=p.image_url;
+modal.style.display="block";
+}
+
+async function save(){
+let body={
+name:n.value,
+price:+p.value,
+stock:+s.value,
+category_id:1,
+image_url:img.value,
+description:""
+};
+
+let url=editId?`/api/products/${editId}`:"/api/products";
+let method=editId?"PUT":"POST";
+
+await fetch(API+url,{
+method,
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(body)
+});
+
+closeM();
+loadProducts();
+}
+
+async function del(id){
+await fetch(API+"/api/products/"+id,{method:"DELETE"});
+loadProducts();
+}
+
+/* ORDERS */
+async function loadOrders(){
+let r=await fetch(API+"/api/orders");
+let d=await r.json();
+
+olist.innerHTML=d.map(o=>`
+<tr>
+<td>${o.id}</td>
+<td>${o.customer_name}</td>
+<td>${o.total}</td>
+<td>${o.status}</td>
+<td>
+<select onchange="updateOrder(${o.id},this.value)">
+<option>${o.status}</option>
+<option>pending</option>
+<option>confirmed</option>
+<option>shipped</option>
+<option>delivered</option>
+</select>
+</td>
+</tr>
+`).join("");
+}
+
+async function updateOrder(id,status){
+await fetch(API+`/api/orders/${id}/status`,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({status})
+});
+}
+
+/* MESSAGES */
+async function loadMessages(){
+let r=await fetch(API+"/api/messages");
+let d=await r.json();
+
+mlist.innerHTML=d.map(m=>`
+<tr>
+<td>${m.sender_name}</td>
+<td>${m.subject}</td>
+<td>${m.is_read?"Read":"New"}</td>
+<td>
+<button onclick="mark(${m.id})">Mark</button>
+</td>
+</tr>
+`).join("");
+}
+
+async function mark(id){
+await fetch(API+`/api/messages/${id}/read`,{method:"PATCH"});
+loadMessages();
+}
+
+if(localStorage.getItem("admin")){
+login.style.display="none";
+dash.style.display="block";
+loadAll();
+}
+
 </script>
+
+</body>
+</html>
