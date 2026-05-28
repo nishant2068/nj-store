@@ -3,16 +3,14 @@ services:
     name: nj-store
     env: python
     plan: free
+
     buildCommand: pip install -r requirements.txt
+
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+
     envVars:
       - key: DB_URL
         scope: run
-        value: # You'll set this in Render dashboard
+
       - key: ADMIN_PIN
         scope: run
-        value: # You'll set this in Render dashboard
-    staticPublishPath: static
-    routes:
-      - path: /uploads
-        pathPrefix: false
