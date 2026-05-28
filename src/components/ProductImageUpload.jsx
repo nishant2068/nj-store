@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { Camera, Upload, Link as LinkIcon, X } from 'lucide-react';
 
+const API = 'https://nj-store.onrender.com';
+
 export default function ProductImageUpload({
   onImageUrl,
   initialUrl = '',
 }) {
-  const [imageUrl, setImageUrl] = useState(initialUrl);
   const [preview, setPreview] = useState(initialUrl);
   const [loading, setLoading] = useState(false);
   const [uploadMode, setUploadMode] = useState(null);
@@ -30,7 +31,7 @@ export default function ProductImageUpload({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/upload', {
+      const response = await fetch(`${API}/api/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -41,11 +42,12 @@ export default function ProductImageUpload({
         throw new Error(data.detail || 'Upload failed');
       }
 
-      setImageUrl(data.url);
-      setPreview(data.url);
+      const fullUrl = `${API}${data.url}`;
+
+      setPreview(fullUrl);
 
       if (onImageUrl) {
-        onImageUrl(data.url);
+        onImageUrl(fullUrl);
       }
 
       setUploadMode(null);
@@ -70,7 +72,7 @@ export default function ProductImageUpload({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/upload-url', {
+      const response = await fetch(`${API}/api/upload-url`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,11 +86,12 @@ export default function ProductImageUpload({
         throw new Error(data.detail || 'Upload failed');
       }
 
-      setImageUrl(data.url);
-      setPreview(data.url);
+      const fullUrl = `${API}${data.url}`;
+
+      setPreview(fullUrl);
 
       if (onImageUrl) {
-        onImageUrl(data.url);
+        onImageUrl(fullUrl);
       }
 
       setUploadMode(null);
@@ -164,7 +167,7 @@ export default function ProductImageUpload({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/upload-base64', {
+      const response = await fetch(`${API}/api/upload-base64`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,11 +183,12 @@ export default function ProductImageUpload({
         throw new Error(data.detail || 'Upload failed');
       }
 
-      setImageUrl(data.url);
-      setPreview(data.url);
+      const fullUrl = `${API}${data.url}`;
+
+      setPreview(fullUrl);
 
       if (onImageUrl) {
-        onImageUrl(data.url);
+        onImageUrl(fullUrl);
       }
 
       setUploadMode(null);
@@ -202,7 +206,6 @@ export default function ProductImageUpload({
   // =====================================================
 
   const removeImage = () => {
-    setImageUrl('');
     setPreview('');
 
     if (onImageUrl) {
