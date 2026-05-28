@@ -1,4 +1,3 @@
-
 fastapi
 uvicorn
 sqlalchemy
@@ -6,4 +5,4 @@ pydantic
 python-multipart
 requests
 pillow
-
+psycopg2-binary
