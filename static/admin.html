@@ -3,19 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NJ Admin Pro</title>
+<title>NJ Admin Panel</title>
 
 <style>
 body{margin:0;font-family:Arial;background:#f4f6f8;}
-.login{height:100vh;display:flex;justify-content:center;align-items:center;background:#667eea;}
+
+.login{
+  height:100vh;display:flex;justify-content:center;align-items:center;
+  background:#667eea;
+}
 .box{background:#fff;padding:25px;border-radius:10px;width:320px;}
 
 .dashboard{display:none;}
-.top{background:#fff;padding:15px;display:flex;justify-content:space-between;}
+
+.top{
+  background:#fff;padding:15px;display:flex;justify-content:space-between;
+}
 
 .container{display:flex;height:calc(100vh - 60px);}
 .side{width:200px;background:#fff;padding:10px;}
-.side button{width:100%;padding:10px;margin-bottom:5px;border:none;background:#eee;}
+.side button{
+  width:100%;padding:10px;margin-bottom:5px;
+  border:none;background:#eee;cursor:pointer;
+}
 .side button.active{background:#667eea;color:#fff;}
 
 .main{flex:1;padding:15px;overflow:auto;}
@@ -25,8 +35,14 @@ body{margin:0;font-family:Arial;background:#f4f6f8;}
 table{width:100%;background:#fff;border-collapse:collapse;}
 th,td{padding:10px;border-bottom:1px solid #eee;}
 
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0008;}
-.mbox{background:#fff;width:400px;margin:60px auto;padding:15px;border-radius:10px;}
+.modal{
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:#0008;
+}
+.mbox{
+  background:#fff;width:400px;margin:60px auto;
+  padding:15px;border-radius:10px;
+}
 
 input,select{width:100%;padding:8px;margin:5px 0;}
 button{cursor:pointer;}
@@ -37,81 +53,87 @@ button{cursor:pointer;}
 
 <!-- LOGIN -->
 <div class="login" id="login">
-<div class="box">
-<h2>Admin Login</h2>
-<input type="password" id="pin" placeholder="PIN">
-<button onclick="login()">Login</button>
-</div>
+  <div class="box">
+    <h2>Admin Login</h2>
+    <input type="password" id="pin" placeholder="PIN">
+    <button onclick="login()">Login</button>
+  </div>
 </div>
 
-<!-- DASH -->
+<!-- DASHBOARD -->
 <div class="dashboard" id="dash">
 
-<div class="top">
-<h3>NJ Admin</h3>
-<button onclick="logout()">Logout</button>
+  <div class="top">
+    <h3>NJ Admin</h3>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <div class="container">
+
+    <div class="side">
+      <button onclick="tab('home')" class="active">Dashboard</button>
+      <button onclick="tab('products')">Products</button>
+      <button onclick="tab('orders')">Orders</button>
+      <button onclick="tab('messages')">Messages</button>
+    </div>
+
+    <div class="main">
+
+      <!-- HOME -->
+      <div id="home">
+        <div class="card" id="stats">Loading...</div>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div id="products" style="display:none;">
+        <input id="search" placeholder="Search products..." oninput="loadProducts()">
+        <button onclick="openModal()">+ Add Product</button>
+
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Price</th><th>Stock</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="plist"></tbody>
+        </table>
+      </div>
+
+      <!-- ORDERS -->
+      <div id="orders" style="display:none;">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Customer</th><th>Total</th><th>Status</th></tr>
+          </thead>
+          <tbody id="olist"></tbody>
+        </table>
+      </div>
+
+      <!-- MESSAGES -->
+      <div id="messages" style="display:none;">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Subject</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody id="mlist"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
 </div>
 
-<div class="container">
-
-<div class="side">
-<button onclick="tab('home')" class="active">Dashboard</button>
-<button onclick="tab('products')">Products</button>
-<button onclick="tab('orders')">Orders</button>
-<button onclick="tab('messages')">Messages</button>
-</div>
-
-<div class="main">
-
-<div id="home">
-<div class="card" id="stats">Loading...</div>
-</div>
-
-<div id="products" style="display:none;">
-<input id="search" placeholder="Search products..." oninput="loadProducts()">
-<button onclick="openModal()">+ Add Product</button>
-<table>
-<thead>
-<tr><th>Name</th><th>Price</th><th>Stock</th><th>Actions</th></tr>
-</thead>
-<tbody id="plist"></tbody>
-</table>
-</div>
-
-<div id="orders" style="display:none;">
-<table>
-<thead>
-<tr><th>ID</th><th>Customer</th><th>Total</th><th>Status</th></tr>
-</thead>
-<tbody id="olist"></tbody>
-</table>
-</div>
-
-<div id="messages" style="display:none;">
-<table>
-<thead>
-<tr><th>Name</th><th>Subject</th><th>Status</th></tr>
-</thead>
-<tbody id="mlist"></tbody>
-</table>
-</div>
-
-</div>
-</div>
-</div>
-
-<!-- MODAL -->
+<!-- PRODUCT MODAL -->
 <div class="modal" id="modal">
-<div class="mbox">
-<h3>Product</h3>
-<input id="n" placeholder="Name">
-<input id="p" placeholder="Price">
-<input id="s" placeholder="Stock">
-<input id="img" placeholder="Image URL">
+  <div class="mbox">
+    <h3>Product</h3>
 
-<button onclick="save()">Save</button>
-<button onclick="closeM()">Close</button>
-</div>
+    <input id="n" placeholder="Name">
+    <input id="pr" placeholder="Price">
+    <input id="st" placeholder="Stock">
+    <input id="img" placeholder="Image URL">
+
+    <button onclick="save()">Save</button>
+    <button onclick="closeM()">Close</button>
+  </div>
 </div>
 
 <script>
@@ -119,14 +141,14 @@ button{cursor:pointer;}
 const API = window.location.origin;
 let editId = null;
 
-/* LOGIN FIXED */
+/* LOGIN */
 async function login(){
-const pinVal = document.getElementById("pin").value;
+const pin = document.getElementById("pin").value;
 
-const r = await fetch(API+"/api/admin/login",{
+const r = await fetch(API + "/api/admin/login",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
-body:JSON.stringify({pin:pinVal})
+body:JSON.stringify({pin})
 });
 
 if(r.ok){
@@ -158,28 +180,27 @@ loadOrders();
 loadMessages();
 }
 
-/* STATS FIX */
+/* STATS */
 async function loadStats(){
 const r = await fetch(API+"/api/stats");
 const d = await r.json();
 
-document.getElementById("stats").innerHTML = `
-Products: ${d.total_products}<br>
+document.getElementById("stats").innerHTML =
+`Products: ${d.total_products}<br>
 Orders: ${d.total_orders}<br>
 Revenue: ${d.total_revenue}<br>
-Messages: ${d.total_messages}
-`;
+Messages: ${d.total_messages}`;
 }
 
-/* PRODUCTS FIX */
+/* PRODUCTS */
 async function loadProducts(){
 const r = await fetch(API+"/api/products");
 const d = await r.json();
 
-let q = document.getElementById("search").value?.toLowerCase() || "";
+const q = document.getElementById("search").value?.toLowerCase() || "";
 
-document.getElementById("plist").innerHTML = d
-.filter(p=>p.name.toLowerCase().includes(q))
+document.getElementById("plist").innerHTML =
+d.filter(p=>p.name.toLowerCase().includes(q))
 .map(p=>`
 <tr>
 <td>${p.name}</td>
@@ -187,44 +208,43 @@ document.getElementById("plist").innerHTML = d
 <td>${p.stock}</td>
 <td>
 <button onclick='editProduct(${JSON.stringify(p)})'>Edit</button>
-<button onclick='del(${p.id})'>Delete</button>
+<button onclick='deleteProduct(${p.id})'>X</button>
 </td>
 </tr>
 `).join("");
 }
 
-/* MODAL */
 function openModal(){
+editId = null;
 document.getElementById("modal").style.display="block";
-editId=null;
 }
 
 function closeM(){
 document.getElementById("modal").style.display="none";
 }
 
-/* EDIT FIX */
 function editProduct(p){
 editId = p.id;
+
 document.getElementById("n").value = p.name;
-document.getElementById("p").value = p.price;
-document.getElementById("s").value = p.stock;
-document.getElementById("img").value = p.image_url;
+document.getElementById("pr").value = p.price;
+document.getElementById("st").value = p.stock;
+document.getElementById("img").value = p.image_url || "";
+
 document.getElementById("modal").style.display="block";
 }
 
-/* SAVE FIX */
 async function save(){
 const body = {
-name:document.getElementById("n").value,
-price:+document.getElementById("p").value,
-stock:+document.getElementById("s").value,
-category_id:1,
-image_url:document.getElementById("img").value,
-description:""
+name: document.getElementById("n").value,
+price: Number(document.getElementById("pr").value),
+stock: Number(document.getElementById("st").value),
+category_id: 1,
+image_url: document.getElementById("img").value,
+description: ""
 };
 
-const url = editId ? `/api/products/${editId}` : `/api/products`;
+const url = editId ? `/api/products/${editId}` : "/api/products";
 const method = editId ? "PUT" : "POST";
 
 await fetch(API+url,{
@@ -237,8 +257,7 @@ closeM();
 loadProducts();
 }
 
-/* DELETE */
-async function del(id){
+async function deleteProduct(id){
 await fetch(API+"/api/products/"+id,{method:"DELETE"});
 loadProducts();
 }
@@ -248,7 +267,8 @@ async function loadOrders(){
 const r = await fetch(API+"/api/orders");
 const d = await r.json();
 
-document.getElementById("olist").innerHTML = d.map(o=>`
+document.getElementById("olist").innerHTML =
+d.map(o=>`
 <tr>
 <td>${o.id}</td>
 <td>${o.customer_name}</td>
@@ -263,17 +283,24 @@ async function loadMessages(){
 const r = await fetch(API+"/api/messages");
 const d = await r.json();
 
-document.getElementById("mlist").innerHTML = d.map(m=>`
+document.getElementById("mlist").innerHTML =
+d.map(m=>`
 <tr>
 <td>${m.sender_name}</td>
 <td>${m.subject}</td>
-<td>${m.is_read ? "Read" : "New"}</td>
+<td>${m.is_read ? "Read":"New"}</td>
+<td><button onclick="mark(${m.id})">Mark</button></td>
 </tr>
 `).join("");
 }
 
+async function mark(id){
+await fetch(API+`/api/messages/${id}/read`,{method:"PATCH"});
+loadMessages();
+}
+
 /* AUTO LOGIN */
-if(localStorage.getItem("admin") === "true"){
+if(localStorage.getItem("admin")==="true"){
 document.getElementById("login").style.display="none";
 document.getElementById("dash").style.display="block";
 loadAll();
