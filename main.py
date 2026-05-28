@@ -1,5 +1,5 @@
 # main.py (FULL CLEAN VERSION)
-
+print("MAIN STARTED")
 
 import os
 import base64
@@ -29,15 +29,22 @@ from pydantic import BaseModel
 
 from sqlalchemy.orm import Session
 
-from database import (
-    init_db,
-    get_db,
-    Category,
-    Product,
-    Order,
-    OrderItem,
-    Message,
-)
+try:
+    from database import (
+        init_db,
+        get_db,
+        Category,
+        Product,
+        Order,
+        OrderItem,
+        Message,
+    )
+
+    print("DATABASE IMPORT OK")
+
+except Exception as e:
+    print("DATABASE IMPORT ERROR:", e)
+    raise e
 
 
 # =========================================================
@@ -59,8 +66,13 @@ app.add_middleware(
 # =========================================================
 # DATABASE
 # =========================================================
+try:
+    init_db()
+    print("DATABASE INIT OK")
 
-init_db()
+except Exception as e:
+    print("DATABASE INIT FAILED:", e)
+    raise e
 
 
 # =========================================================
